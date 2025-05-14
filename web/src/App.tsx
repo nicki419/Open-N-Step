@@ -5,26 +5,24 @@ import {SerialManager} from "./Utilities/SerialManager";
 import Sider from "antd/es/layout/Sider";
 import { SettingOutlined, ControlOutlined, SunOutlined, MoonOutlined, FullscreenOutlined, CodeOutlined, GithubOutlined } from '@ant-design/icons';
 import {Content, Header} from "antd/es/layout/layout";
+import { useDarkMode } from './Utilities/DarkModeContext';
+import { useSerial } from './Utilities/SerialContext';
+import CalibrationPage from './Pages/CalibrationPage';
+import ConfigurationPage from "./Pages/ConfigurationPage";
+import ArduinoPage from "./Pages/ArduinoPage";
 
 const { Title } = Typography;
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedKey, setSelectedKey] = useState('control');
-  const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem('darkMode');
-    return stored === null ? true : stored === 'true';
-  });
-  const [serialManager] = useState(() => new SerialManager());
-  const [serialLog, setSerialLog] = useState<string[]>(['[INFO] System ready.']);
-  const [serialSupported, setSerialSupported] = useState(true);
+  const [selectedKey, setSelectedKey] = useState('calibration');
+  const { darkMode, setDarkMode } = useDarkMode();
+  const { serialManager, serialLog, setSerialLog, serialSupported } = useSerial();
   const [modal, contextHolder] = Modal.useModal();
   
   // Web Serial Compatibility Check
   useEffect(() => {
-    window.scrollTo(0, 0);
-    if (!("serial" in navigator)) {
-      setSerialSupported(false);
+    if (!serialSupported) {
       modal.error({
         title: "Your browser is incompatible.",
         content: "This application requires Web Serial API. Try using Chrome, Edge, or Opera.",
@@ -34,7 +32,7 @@ function App() {
         keyboard: false,
       });
     }
-  }, []);
+  }, [serialSupported]);
   
   // Toggle Dark Mode
   const toggleDarkMode = (checked: boolean) => {
@@ -45,14 +43,14 @@ function App() {
   // Menu Items
   const menuItems: MenuProps['items'] = [
     {
-      key: 'config',
-      icon: <ControlOutlined />,
-      label: 'Configuration',
-    },
-    {
       key: 'calibration',
       icon: <SettingOutlined />,
       label: 'Calibration',
+    },
+    {
+      key: 'config',
+      icon: <ControlOutlined />,
+      label: 'Configuration',
     },
     {
       key: 'arduino',
@@ -125,9 +123,9 @@ function App() {
           </Header>
   
           <Content style={{ margin: '16px' }}>
-            {selectedKey === 'control' && <></>}
-            {selectedKey === 'calibration' && <></>}
-            {selectedKey === 'arduino' && <></>}
+            {selectedKey === 'calibration' && <CalibrationPage />}
+            {selectedKey === 'config' && <ConfigurationPage />}
+            {selectedKey === 'arduino' && <ArduinoPage />}
           </Content>
         </Layout>
       </Layout>
